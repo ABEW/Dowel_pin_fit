@@ -1,10 +1,11 @@
-package com.example.helloworld;
+package com.example;
 
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
 import java.awt.event.*;
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 
 
 /**
@@ -45,16 +46,16 @@ public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
         setDefaultCloseOperation( EXIT_ON_CLOSE);
 
         try{
-            File Document1 = new File("/Users/Abew/introcs/hello/Internal.csv");
-            File Document2 = new File("/Users/Abew/introcs/hello/External.csv");
+            File Document1 = new File("Internal.csv");
+            File Document2 = new File("External.csv");
 
             System.out.println(getClass().getProtectionDomain().getCodeSource().getLocation());
             System.out.println(new File(".").getAbsolutePath());
+            
+            System.out.println(getClass().getClassLoader().getResource("Internal.csv").getPath());
 
-           System.out.println(getClass().getResource("Internal.csv").getPath());
-
-            CSVReader Internal = new CSVReader(new FileReader(getClass().getResource("Internal.csv").getPath()));
-            CSVReader External = new CSVReader(new FileReader(getClass().getResource("External.csv").getPath()));
+            CSVReader Internal = new CSVReader(new FileReader(getClass().getClassLoader().getResource("Internal.csv").getPath()));
+            CSVReader External = new CSVReader(new FileReader(getClass().getClassLoader().getResource("External.csv").getPath()));
 
 
             List<String[]> Inner = Internal.readAll();
@@ -111,7 +112,10 @@ public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
 
 
         }
-
+        catch (CsvException e)
+        {
+            System.out.println("Unable to read the csv files");
+        }
         catch(IOException e)
         {
             System.out.println("An error has occured");
@@ -134,8 +138,9 @@ public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
                 Diameter=Dia1;
 
                 try {
-                    File Document1 = new File("/Users/Abew/introcs/hello/Internal.csv");
-                    File Document2 = new File("/Users/Abew/introcs/hello/External.csv");
+
+                    File Document1 = new File("Internal.csv");
+                    File Document2 = new File("External.csv");
 
 
                     final int[] size = {0, 3, 6, 10, 14, 18};
@@ -149,8 +154,9 @@ public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
                         index++;
                     }
 
-                    CSVReader Internal = new CSVReader(new FileReader(Document1));
-                    CSVReader External = new CSVReader(new FileReader(Document2));
+                    CSVReader Internal = new CSVReader(new FileReader(getClass().getClassLoader().getResource("Internal.csv").getPath()));
+                    CSVReader External = new CSVReader(new FileReader(getClass().getClassLoader().getResource("External.csv").getPath()));
+
 
                     List<String[]> Inner = Internal.readAll();
                     List<String[]> Outer = External.readAll();
@@ -185,7 +191,7 @@ public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
 
                     catch(IOException e)
                     {
-                        System.out.println("An error has occured");
+                        System.out.println("An error has occured " + e);
                     }
 
             }
