@@ -3,228 +3,225 @@ package com.example;
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.border.Border;
+
+import java.awt.BorderLayout;
 import java.awt.event.*;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 
-
 /**
- * Created by Abew on 2016-11-15.
+ * Created by Abew on 2016-11-15. Updated on 2025-03-11
  */
-public class DowelPinFit extends JFrame implements ItemListener,ActionListener{
+public class DowelPinFit extends JFrame implements ItemListener, ActionListener {
 
-    JPanel pnl= new JPanel();
-    JTextField txt1= new JTextField("Internal Dimension",10);
-    JTextField txt2= new JTextField("External Dimension",10);
+    JPanel pnl = new JPanel();
+    
+    JTextField txt1 = new JTextField("Internal Dimension", 10);
+    JTextField txt2 = new JTextField("External Dimension", 10);
 
-    JTextArea FIT= new JTextArea(2,20);
-    JComboBox Box1= new JComboBox ();
-    JComboBox Box2= new JComboBox ();
+    JTextArea textArea = new JTextArea(2, 20);
+    JComboBox<String> box1 = new JComboBox<>();
+    JComboBox<String> box2 = new JComboBox<>();
 
-    float Hole_MMC= 0.0f;
-    float Hole_LMC= 0.0f;
-    float Pin_MMC= 0.0f;
-    float Pin_LMC= 0.0f;
+    float holeMmc = 0.0f;
+    float holeLmc = 0.0f;
+    float pinMmc = 0.0f;
+    float pinLmc = 0.0f;
 
-    String Hole_Tol= "E12";
-    String Pin_Tol= "E11";
+    String holeTol = "E12";
+    String pinTol = "E11";
 
-    int Diameter= 3;
+    float diameter = 3;
 
-    int row_index = 1;
+    int rowIndex = 1;
 
-    String[] Fit_Type= {"CLEARANCE","INTERFERENCE","TRANSITION"};
+    String[] fitType = { "CLEARANCE", "INTERFERENCE", "TRANSITION" };
 
-    int fit_index=0;
+    int fitIndex = 0;
 
+    Map<String, List<String[]>> csvData;
 
-    public DowelPinFit(){
+    public DowelPinFit() {
 
         super("DOWEL PIN FIT TEST");
-        setSize(290,170);
+        setSize(300, 180);
         setResizable(false);
-        setDefaultCloseOperation( EXIT_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        try{
-            File Document1 = new File("Internal.csv");
-            File Document2 = new File("External.csv");
+        this.csvData = loadReferenceArrays();
 
-            System.out.println(getClass().getProtectionDomain().getCodeSource().getLocation());
-            System.out.println(new File(".").getAbsolutePath());
-            
-            System.out.println(getClass().getClassLoader().getResource("Internal.csv").getPath());
+        List<String[]> inner = csvData.get("internal");
+        List<String[]> outer = csvData.get("external");
 
-            CSVReader Internal = new CSVReader(new FileReader(getClass().getClassLoader().getResource("Internal.csv").getPath()));
-            CSVReader External = new CSVReader(new FileReader(getClass().getClassLoader().getResource("External.csv").getPath()));
+        String[] idEntry = inner.get(0);
+        String[] odEntry = outer.get(0);
 
+        String[] Tol_internal = Arrays.copyOfRange(idEntry, 2, idEntry.length - 1);
+        String[] Tol_external = Arrays.copyOfRange(odEntry, 2, odEntry.length - 1);
 
-            List<String[]> Inner = Internal.readAll();
-            List<String[]> Outer = External.readAll();
+        final int[] size = { 0, 3, 6, 10, 14, 18 };
 
-            String[] ID_entry = Inner.get(0);
-            String[] OD_entry = Outer.get(0);
+        int index = 0;
 
-            String[] Tol_internal = Arrays.copyOfRange(ID_entry, 2, ID_entry.length - 1);
-            String[] Tol_external = Arrays.copyOfRange(OD_entry, 2, OD_entry.length - 1);
+        rowIndex = 1;
 
-            final int[] size= {0,3,6,10,14,18};
-
-            int index=0;
-
-            row_index = 1;
-
-            while (!(Diameter>size[index] && Diameter<=size[index+1]))
-            {
-                row_index+=2;
-                index++;
-            }
-
-
-            DefaultComboBoxModel model1 = new DefaultComboBoxModel( Tol_internal );
-            Box1.setModel(model1);
-            DefaultComboBoxModel model2 = new DefaultComboBoxModel( Tol_external );
-            Box2.setModel(model2);
-
-
-
-            JButton calculate= new JButton("CALCULATE");
-
-            Box1.addItemListener(this);
-            Box2.addItemListener(this);
-            calculate.addActionListener(this);
-
-            JLabel Internal_lbl= new JLabel("Internal");
-            JLabel External_lbl= new JLabel("External");
-
-
-            add(pnl);
-            pnl.add(Internal_lbl);
-            pnl.add(txt1);
-            pnl.add(Box1);
-            pnl.add(External_lbl);
-            pnl.add(txt2);
-            pnl.add(Box2);
-            pnl.add(calculate);
-            pnl.add(FIT);
-
-            setVisible(true);
-
-
-
-        }
-        catch (CsvException e)
-        {
-            System.out.println("Unable to read the csv files");
-        }
-        catch(IOException e)
-        {
-            System.out.println("An error has occured");
+        while (!(diameter > size[index] && diameter <= size[index + 1])) {
+            rowIndex += 2;
+            index++;
         }
 
+        DefaultComboBoxModel<String> model1 = new DefaultComboBoxModel<>(Tol_internal);
+        box1.setModel(model1);
+        DefaultComboBoxModel<String> model2 = new DefaultComboBoxModel<>(Tol_external);
+        box2.setModel(model2);
+
+        JButton calculate = new JButton("CALCULATE");
+
+        box1.addItemListener(this);
+        box2.addItemListener(this);
+        calculate.addActionListener(this);
+
+        JLabel internalLabel = new JLabel("Hole");
+        JLabel externalLabel = new JLabel("Pin");
+
+        internalLabel.setBounds(10,0,40,30);
+        txt1.setBounds(50,0,135,30);
+        box1.setBounds(200,0,100,30);
+
+        externalLabel.setBounds(10,35,40,30);
+        txt2.setBounds(50,35,135,30);
+        box2.setBounds(200,35,100,30);
+
+        calculate.setBounds(100,70,100,30);
+        textArea.setBounds(50,105,200,30);
+
+        add(pnl);
+        pnl.setLayout(null);
+        pnl.add(internalLabel);
+        pnl.add(txt1);
+        pnl.add(box1);
+        pnl.add(externalLabel);
+        pnl.add(txt2);
+        pnl.add(box2);
+        pnl.add(calculate);
+        pnl.add(textArea);
+
+        setVisible(true);
 
     }
 
-    public void actionPerformed (ActionEvent event)
-    {
-        String Val1 = txt1.getText();
-        String Val2= txt2.getText();
+    public Map<String, List<String[]>> loadReferenceArrays() {
 
-        try{
-            int Dia1 = Integer.parseInt(Val1);
-            int Dia2 = Integer.parseInt(Val2);
+        Map<String, List<String[]>> tableData = new HashMap<>();
 
-            if (Dia1==Dia2) {
+        try (
+                // Load Internal.csv using InputStreamReader
+                InputStream internalInputStream = getClass().getClassLoader().getResourceAsStream("Internal.csv");
+                // Load External.csv using InputStreamReader
+                InputStream externalInputStream = getClass().getClassLoader().getResourceAsStream("External.csv");
 
-                Diameter=Dia1;
+                // Check if internal file is available and read
+                CSVReader internal = (internalInputStream != null)
+                        ? new CSVReader(new InputStreamReader(internalInputStream))
+                        : null;
+                CSVReader external = (externalInputStream != null)
+                        ? new CSVReader(new InputStreamReader(externalInputStream))
+                        : null;) {
+            if (internal == null) {
+                System.out.println("Internal reference not found");
+            }
 
-                try {
+            if (external == null) {
+                System.out.println("External reference not found");
+            }
 
-                    File Document1 = new File("Internal.csv");
-                    File Document2 = new File("External.csv");
+            List<String[]> inner = internal.readAll();
+            List<String[]> outer = external.readAll();
 
+            tableData.put("internal", inner);
+            tableData.put("external", outer);
 
-                    final int[] size = {0, 3, 6, 10, 14, 18};
+        } catch (CsvException e) {
+            System.out.println("Unable to read the csv files " + e.getMessage());
+        } catch (IOException | NullPointerException e) {
+            System.out.println("An error has occured " + e.getMessage());
+        }
 
-                    int index = 0;
+        return tableData;
 
-                    row_index = 1;
+    }
 
-                    while (!(Diameter > size[index] && Diameter <= size[index + 1])) {
-                        row_index += 2;
-                        index++;
-                    }
+    public void actionPerformed(ActionEvent event) {
+        String val1 = txt1.getText();
+        String val2 = txt2.getText();
 
-                    CSVReader Internal = new CSVReader(new FileReader(getClass().getClassLoader().getResource("Internal.csv").getPath()));
-                    CSVReader External = new CSVReader(new FileReader(getClass().getClassLoader().getResource("External.csv").getPath()));
+        try {
+            float Dia1 =  Float.parseFloat(val1); //Integer.parseInt(Val1);
+            float Dia2 = Float.parseFloat(val2); //Integer.parseInt(Val2);
 
+            if (Dia1 == Dia2) {
 
-                    List<String[]> Inner = Internal.readAll();
-                    List<String[]> Outer = External.readAll();
+                diameter = Dia1;
 
-                    String[] ID_entry = Inner.get(0);
-                    String[] OD_entry = Outer.get(0);
-                    
+                final int[] size = { 0, 3, 6, 10, 14, 18 };
 
-                    Hole_MMC = Float.parseFloat(Inner.get(row_index)[Arrays.asList(ID_entry).indexOf(Hole_Tol)]);
-                    Hole_LMC = Float.parseFloat(Inner.get(row_index+1)[Arrays.asList(ID_entry).indexOf(Hole_Tol)]);
+                int index = 0;
 
-                    Pin_MMC = Float.parseFloat(Outer.get(row_index)[Arrays.asList(OD_entry).indexOf(Pin_Tol)]);
-                    Pin_LMC = Float.parseFloat(Outer.get(row_index+1)[Arrays.asList(OD_entry).indexOf(Pin_Tol)]);
+                rowIndex = 1;
 
-                    float Clearance_low = Hole_LMC-Pin_MMC;
-                    float Clearance_high= Hole_MMC-Pin_LMC;
-
-                    if (Clearance_high<=0)
-                    {
-                        fit_index=1;
-                    }
-                    else if (Clearance_low<=0)
-                    {
-                        fit_index=2;
-                    }
-
-                    FIT.setText(Fit_Type[fit_index]+" FIT: ["+String.format("%.3f",Clearance_low)+
-                            ","+String.format("%.3f",Clearance_high)+"]\n");
-
-
+                while (!(diameter > size[index] && diameter <= size[index + 1])) {
+                    rowIndex += 2;
+                    index++;
                 }
 
-                    catch(IOException e)
-                    {
-                        System.out.println("An error has occured " + e);
-                    }
+                List<String[]> inner = this.csvData.get("internal");
+                List<String[]> outer = this.csvData.get("external");
+
+                String[] idEntry = inner.get(0);
+                String[] odEntry = outer.get(0);
+
+                holeMmc = Float.parseFloat(inner.get(rowIndex)[Arrays.asList(idEntry).indexOf(holeTol)]);
+                holeLmc = Float.parseFloat(inner.get(rowIndex + 1)[Arrays.asList(idEntry).indexOf(holeTol)]);
+
+                pinMmc = Float.parseFloat(outer.get(rowIndex)[Arrays.asList(odEntry).indexOf(pinTol)]);
+                pinLmc = Float.parseFloat(outer.get(rowIndex + 1)[Arrays.asList(odEntry).indexOf(pinTol)]);
+
+                float clearanceLow = holeLmc - pinMmc;
+                float clearanceHigh = holeMmc - pinLmc;
+
+                if (clearanceHigh <= 0) {
+                    fitIndex = 1;
+                } else if (clearanceLow <= 0) {
+                    fitIndex = 2;
+                }
+
+                textArea.setText(fitType[fitIndex] + " FIT: [" + String.format("%.3f", clearanceLow) + ","
+                        + String.format("%.3f", clearanceHigh) + "]\n");
 
             }
 
-            else
-            {
-                FIT.setText("DIAMETER MISMATCH");
+            else {
+                textArea.setText("DIAMETER MISMATCH");
             }
 
-
-        }
-        catch(Exception ED)
-        {
-            FIT.setText("INVALID DIAMETER");
+        } catch (Exception ED) {
+            textArea.setText("INVALID DIAMETER");
         }
 
     }
 
-    public void itemStateChanged(ItemEvent event)
-    {
-        if((event.getItemSelectable()== Box1) && (event.getStateChange()== ItemEvent.SELECTED))
-        {
-            Hole_Tol=event.getItem().toString();
+    public void itemStateChanged(ItemEvent event) {
+        if ((event.getItemSelectable() == box1) && (event.getStateChange() == ItemEvent.SELECTED)) {
+            holeTol = event.getItem().toString();
         }
 
-        if((event.getItemSelectable()== Box2) && (event.getStateChange()== ItemEvent.SELECTED))
-        {
-            Pin_Tol=event.getItem().toString();
+        if ((event.getItemSelectable() == box2) && (event.getStateChange() == ItemEvent.SELECTED)) {
+            pinTol = event.getItem().toString();
         }
     }
 
-    public static void main ( String[] ags)
-    {
-        DowelPinFit gui= new DowelPinFit();
+    public static void main(String[] ags) {
+        new DowelPinFit();
     }
 }
