@@ -1,4 +1,4 @@
-# Dowel_pin_fit
+# Dowel Pin Fit
 Generate a GUI to show the fit of the selected dowel and hole tolerance using a lookup table
 
 ## Requirements
@@ -10,3 +10,5 @@ javac -cp "lib/opencsv-5.10.jar" -d bin src/main/java/com/example/DowelPinFit.ja
 
 java -cp "bin:lib/commons-lang3-3.17.0.jar:lib/opencsv-5.10.jar:src/main/resources" com.example.DowelPinFit
 ```
+
+If using VScode, please ensure that the class path includes the resources folder at [src/main/resources](./src/main/resources/)

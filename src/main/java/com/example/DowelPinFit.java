@@ -3,9 +3,7 @@ package com.example;
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.border.Border;
 
-import java.awt.BorderLayout;
 import java.awt.event.*;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
